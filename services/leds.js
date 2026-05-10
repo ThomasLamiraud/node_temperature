@@ -8,9 +8,9 @@ const TEMPERATURE_LEDS = [
   { name: "hot / red", pin: 18, matches: () => true },
 ];
 
-let initialized = false;
-let disabled = false;
-let enabled = true;
+let gpioReady = false;
+let hardwareAvailable = true;
+let userEnabled = true;
 let exportedLeds = [];
 let activeLedName = null;
 let cleanupHandlersRegistered = false;
@@ -20,23 +20,27 @@ function getActiveTemperatureLed(temperature) {
   return TEMPERATURE_LEDS.find((led) => led.matches(temperature));
 }
 
-function disableLeds(message) {
-  if (!disabled) {
+function markHardwareUnavailable(message) {
+  if (hardwareAvailable) {
     console.warn(`LED status disabled: ${message}`);
   }
 
-  disabled = true;
+  hardwareAvailable = false;
   cleanup();
 }
 
+function canUseHardware() {
+  return hardwareAvailable;
+}
+
 function initialize() {
-  if (initialized || disabled) return !disabled;
+  if (gpioReady || !canUseHardware()) return canUseHardware();
 
   let Gpio;
   try {
     ({ Gpio } = require("onoff"));
   } catch (error) {
-    disableLeds(error.message);
+    markHardwareUnavailable(error.message);
     return false;
   }
 
@@ -48,12 +52,12 @@ function initialize() {
       });
     }
 
-    initialized = true;
+    gpioReady = true;
     turnAllOff();
     registerCleanupHandlers();
     return true;
   } catch (error) {
-    disableLeds(error.message);
+    markHardwareUnavailable(error.message);
     return false;
   }
 }
@@ -91,7 +95,7 @@ function cleanup() {
   }
 
   exportedLeds = [];
-  initialized = false;
+  gpioReady = false;
   activeLedName = null;
 }
 
@@ -103,8 +107,8 @@ exports.updateTemperature = function (temperature) {
 
   lastTemperature = temperature;
 
-  if (!enabled) {
-    if (initialized) turnAllOff();
+  if (!userEnabled) {
+    if (gpioReady) turnAllOff();
     return;
   }
 
@@ -120,14 +124,14 @@ exports.updateTemperature = function (temperature) {
     activeLedName = activeLed.name;
     console.log(`LED status: ${activeLed.name} on GPIO${activeLed.pin}`);
   } catch (error) {
-    disableLeds(error.message);
+    markHardwareUnavailable(error.message);
   }
 };
 
 exports.setEnabled = function (nextEnabled) {
-  enabled = Boolean(nextEnabled);
+  userEnabled = Boolean(nextEnabled);
 
-  if (!enabled) {
+  if (!userEnabled) {
     cleanup();
     return;
   }
@@ -139,8 +143,8 @@ exports.setEnabled = function (nextEnabled) {
 
 exports.getStatus = function () {
   return {
-    enabled,
-    available: !disabled,
+    enabled: userEnabled,
+    available: hardwareAvailable,
     activeLed: activeLedName,
   };
 };
