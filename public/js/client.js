@@ -2,16 +2,69 @@ const socket = io();
 let tempChart;
 let ledsEnabled = true;
 
-const TEMPERATURE_LEDS_COLORS = [
-    { matches: (temperature) => temperature < 20000, color: "#f8fafc" },
-  { matches: (temperature) => temperature <= 24000, color: "#22c55e" },
-  { matches: (temperature) => temperature <= 28000, color: "#f97316" },
-  { matches: () => true, color: "#ef4444" },
-]
+const TEMPERATURE_LED_RANGES = [
+    {
+        key: "white",
+        label: "White",
+        rangeText: "< 20°C",
+        description: "Cold",
+        color: "#f8fafc",
+        matches: (temperature) => temperature < 20000,
+    },
+    {
+        key: "green",
+        label: "Green",
+        rangeText: "20-24°C",
+        description: "Comfortable",
+        color: "#22c55e",
+        matches: (temperature) => temperature <= 24000,
+    },
+    {
+        key: "orange",
+        label: "Orange",
+        rangeText: "24-28°C",
+        description: "Warm",
+        color: "#f97316",
+        matches: (temperature) => temperature <= 28000,
+    },
+    {
+        key: "red",
+        label: "Red",
+        rangeText: "> 28°C",
+        description: "Hot",
+        color: "#ef4444",
+        matches: () => true,
+    },
+];
+
+function getTemperatureLedRange(temperature) {
+    return TEMPERATURE_LED_RANGES.find((range) => range.matches(temperature));
+}
 
 function addColorToValueDisplay(html_tag, value) {
-  color = TEMPERATURE_LEDS_COLORS.find((led) => led.matches(value)).color;
-  html_tag.style.color = color;
+  const ledRange = getTemperatureLedRange(value);
+  html_tag.style.color = ledRange.color;
+}
+
+function renderLedLegend() {
+    const legend = document.getElementById("led-legend");
+    if (!legend) return;
+
+    for (const range of TEMPERATURE_LED_RANGES) {
+        const item = document.createElement("div");
+        item.className = "led-legend-item";
+
+        const dot = document.createElement("span");
+        dot.className = "led-dot";
+        dot.style.backgroundColor = range.color;
+        if (range.key === "white") dot.classList.add("led-dot-bordered");
+
+        const label = document.createElement("span");
+        label.innerText = `${range.label} ${range.rangeText} - ${range.description}`;
+
+        item.append(dot, label);
+        legend.appendChild(item);
+    }
 }
 
 // Theme handling
@@ -275,6 +328,7 @@ socket.on('sending temperature', function(readout) {
 
 window.onload = function() {
     initChart();
+    renderLedLegend();
     // Ensure icon state matches saved theme
     const savedTheme = localStorage.getItem('theme') || 'dark';
     updateThemeIcon(savedTheme);

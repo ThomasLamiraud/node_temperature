@@ -160,21 +160,8 @@ h1 {
     width: 0.625rem;
 }
 
-.led-dot-white {
-    background: #f8fafc;
+.led-dot-bordered {
     box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.5);
-}
-
-.led-dot-green {
-    background: #22c55e;
-}
-
-.led-dot-orange {
-    background: #f97316;
-}
-
-.led-dot-red {
-    background: #ef4444;
 }
 
 /* Chart Card */
