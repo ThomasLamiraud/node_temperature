@@ -134,6 +134,9 @@ function initChart() {
                 },
                 y: {
                     beginAtZero: false,
+                    ticks: {
+                        stepSize: 0.5
+                    },
                     grid: {
                         color: gridColor
                     }
