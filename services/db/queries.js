@@ -1,4 +1,5 @@
-const DB_PATH = './db/temperature_db.db'
+const DB_PATH = './db/temperature_db.db';
+const SENSOR_READINGS_SELECT = `SELECT id, temperature AS value, humidity, date FROM sensor_readings`;
 const memoryRows = [];
 
 function isFakeModeEnabled() {
@@ -17,20 +18,73 @@ function getSqlite() {
   }
 }
 
-exports.insertRow = function(value, humidity) {
+function createDb() {
   const sqlite3 = getSqlite();
-  if (!sqlite3) {
-    memoryRows.push({
-      id: memoryRows.length + 1,
-      value,
-      temperature: value,
-      humidity,
-      date: new Date().toISOString(),
+  return sqlite3 ? new sqlite3.Database(DB_PATH) : null;
+}
+
+function insertMemoryRow(value, humidity) {
+  memoryRows.push({
+    id: memoryRows.length + 1,
+    value,
+    temperature: value,
+    humidity,
+    date: new Date().toISOString(),
+  });
+}
+
+function selectRows(query, params = []) {
+  const db = createDb();
+  if (!db) return Promise.resolve(memoryRows.slice(-50));
+
+  return new Promise((resolve, reject) => {
+    db.all(query, params, (error, rows) => {
+      db.close();
+
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve(rows);
     });
-    return;
+  });
+}
+
+function getRangeQuery(limit) {
+  if (limit === '1h') {
+    return {
+      query: `${SENSOR_READINGS_SELECT} WHERE date >= ? ORDER BY date ASC;`,
+      params: [new Date(Date.now() - 60 * 60 * 1000).toISOString()],
+    };
   }
 
-  let db = new sqlite3.Database(DB_PATH);
+  if (limit === '24h') {
+    return {
+      query: `${SENSOR_READINGS_SELECT} WHERE date >= ? ORDER BY date ASC;`,
+      params: [new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()],
+    };
+  }
+
+  if (limit === '7d') {
+    return {
+      query: `${SENSOR_READINGS_SELECT} WHERE date >= ? ORDER BY date ASC;`,
+      params: [new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()],
+    };
+  }
+
+  return {
+    query: `SELECT id, temperature AS value, humidity, date FROM (SELECT * FROM sensor_readings ORDER BY id DESC LIMIT 50) ORDER BY id ASC;`,
+    params: [],
+  };
+}
+
+exports.insertRow = function(value, humidity) {
+  const db = createDb();
+  if (!db) {
+    insertMemoryRow(value, humidity);
+    return;
+  }
 
   db.run(
     `INSERT INTO sensor_readings (temperature, humidity, date) VALUES (?, ?, ?)`,
@@ -38,77 +92,39 @@ exports.insertRow = function(value, humidity) {
     function (error) {
       if (error) {
         console.error("error", error.message);
+        db.close();
+        return;
       }
+
       console.log(`Inserted a row with the ID: ${this.lastID}`);
+      db.close();
     }
   );
-
-  // close the database connection
-  db.close();
-}
+};
 
 exports.selectLastTemperature = async function() {
-  const sqlite3 = getSqlite();
-  if (!sqlite3) {
-    return memoryRows.slice(-1);
-  }
-
-  let db = new sqlite3.Database(DB_PATH);
+  const db = createDb();
+  if (!db) return memoryRows.slice(-1);
 
   return new Promise((resolve, reject) => {
-    db.all(`SELECT id, temperature AS value, humidity, date FROM sensor_readings ORDER BY id DESC LIMIT 1;`, (error, rows) => {
-      if(error) {
-        reject(error)
-      }
-      console.log('selectLastTemperature', {rows});
-      resolve(rows)
-    })
+    db.all(`${SENSOR_READINGS_SELECT} ORDER BY id DESC LIMIT 1;`, (error, rows) => {
+      db.close();
 
-    db.close();
-  })
-}
+      if(error) {
+        reject(error);
+        return;
+      }
+
+      resolve(rows);
+    });
+  });
+};
 
 exports.selectTemperaturesByRange = async function(limit) {
-  const sqlite3 = getSqlite();
-  if (!sqlite3) {
-    return memoryRows.slice(-50);
-  }
-
-  let db = new sqlite3.Database(DB_PATH);
-  
-  // Calculate start date based on range (default to 50 items if no date range is used)
-  let query = `SELECT id, temperature AS value, humidity, date FROM (SELECT * FROM sensor_readings ORDER BY id DESC LIMIT 50) ORDER BY id ASC;`;
-  let params = [];
-
-  if (limit === '1h') {
-      // 1 hour ago
-      const date = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      query = `SELECT id, temperature AS value, humidity, date FROM sensor_readings WHERE date >= ? ORDER BY date ASC;`;
-      params = [date];
-  } else if (limit === '24h') {
-      // 24 hours ago
-      const date = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      query = `SELECT id, temperature AS value, humidity, date FROM sensor_readings WHERE date >= ? ORDER BY date ASC;`;
-      params = [date];
-  } else if (limit === '7d') {
-      // 7 days ago
-      const date = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      query = `SELECT id, temperature AS value, humidity, date FROM sensor_readings WHERE date >= ? ORDER BY date ASC;`;
-      params = [date];
-  }
-
-  return new Promise((resolve, reject) => {
-    db.all(query, params, (error, rows) => {
-      if(error) {
-        reject(error)
-      }
-      resolve(rows)
-    })
-
-    db.close();
-  })
-}
+  const { query, params } = getRangeQuery(limit);
+  return selectRows(query, params);
+};
 
 exports.selectAllTemperatures = async function() {
   return exports.selectTemperaturesByRange();
-}
+};
