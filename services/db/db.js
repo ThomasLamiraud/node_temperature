@@ -34,21 +34,14 @@ function createDbConnection() {
             return;
           }
 
-          migrateTemperaturesTable(db, (migrationError) => {
-            if (migrationError) {
-              reject(migrationError);
+          db.close((closeError) => {
+            if (closeError) {
+              reject(closeError);
               return;
             }
 
-            db.close((closeError) => {
-              if (closeError) {
-                reject(closeError);
-                return;
-              }
-
-              console.log("Connection with SQLite has been established");
-              resolve();
-            });
+            console.log("Connection with SQLite has been established");
+            resolve();
           });
         });
       });
@@ -66,56 +59,6 @@ function createSensorReadingsTable(db, callback) {
       date TEXT
     );
   `, callback);
-}
-
-function migrateTemperaturesTable(db, callback) {
-  db.get(
-    `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'temperatures';`,
-    (error, table) => {
-      if (error) {
-        callback(error);
-        return;
-      }
-
-      if (!table) {
-        callback();
-        return;
-      }
-
-      db.get(`SELECT COUNT(*) AS count FROM sensor_readings;`, (countError, row) => {
-        if (countError) {
-          callback(countError);
-          return;
-        }
-
-        if (row.count > 0) {
-          callback();
-          return;
-        }
-
-        copyTemperatureRows(db, callback);
-      });
-    }
-  );
-}
-
-function copyTemperatureRows(db, callback) {
-  db.all(`PRAGMA table_info(temperatures);`, (error, columns) => {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    const humidityExpression = columns.some(column => column.name === "humidity")
-      ? "humidity"
-      : "NULL";
-
-    db.run(`
-      INSERT INTO sensor_readings (id, temperature, humidity, date)
-      SELECT id, value, ${humidityExpression}, date
-      FROM temperatures;
-    `, callback);
-  });
 }
 
 module.exports = createDbConnection;
