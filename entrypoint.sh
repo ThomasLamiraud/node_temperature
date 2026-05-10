@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
 
+# The node_modules Docker volume can outlive the image, so install newly added
+# production dependencies before starting the app.
+if [ ! -f "/app/node_modules/node-dht-sensor/package.json" ]; then
+    echo "📦 Installing missing production dependencies..."
+    npm install --production
+fi
+
 # Define the path Node.js is screaming for
 EXPECTED_DIR="/app/node_modules/sqlite3/lib/binding/napi-v6-linux-glibc-arm"
 EXPECTED_FILE="$EXPECTED_DIR/node_sqlite3.node"

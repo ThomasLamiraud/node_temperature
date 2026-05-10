@@ -5,8 +5,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Mount the sensor data directory from the Pi to the container
-      - /sys/bus/w1/devices:/sys/bus/w1/devices:ro
       # Persist the database file locally
       - ./db:/app/db
       # Persist node_modules to avoid recompiling sqlite3 on every deploy
@@ -15,7 +13,9 @@ services:
       # This allows ./deploy.sh --quick to work by updating files on host
       - ./:/app
     environment:
-      - W1_BASE_PATH=/sys/bus/w1/devices
+      - DHT_SENSOR_TYPE=22
+      # BCM GPIO number where the DHT22 data pin is connected
+      - DHT_GPIO_PIN=4
     privileged: true # Required for hardware access
 
 volumes:

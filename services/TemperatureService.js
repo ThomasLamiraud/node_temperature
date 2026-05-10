@@ -1,79 +1,55 @@
 const queries = require("./db/queries");
-const fs = require('fs');
-const path = require('path');
 
-// Base directory for 1-wire devices (can be overridden by environment variable)
-// Default for production (Raspberry Pi default): /sys/bus/w1/devices
-// Fallback for local development if not set: ./sys/bus/w1/devices
-const W1_BASE_PATH = process.env.W1_BASE_PATH || './sys/bus/w1/devices';
+const SENSOR_TYPE = parseInt(process.env.DHT_SENSOR_TYPE || '22', 10);
+const GPIO_PIN = parseInt(process.env.DHT_GPIO_PIN || '4', 10);
+const FAKE_TEMPERATURE = process.env.DHT_FAKE_TEMPERATURE;
+const FAKE_HUMIDITY = process.env.DHT_FAKE_HUMIDITY;
 
-let cachedSensorPath = null;
+let sensorLib = null;
+let sensorInitialized = false;
 
-function findSensorPath() {
-    // If cached, return it
-    if (cachedSensorPath && fs.existsSync(cachedSensorPath)) return cachedSensorPath;
-    
-    // Clear cache if path doesn't exist anymore
-    cachedSensorPath = null;
+function getSensorLib() {
+  if (!sensorLib) {
+    sensorLib = require('node-dht-sensor');
+  }
 
-    try {
-        if (!fs.existsSync(W1_BASE_PATH)) {
-            // Only log this once or if really needed, to avoid spamming
-            // But here we return null so the calling function handles it
-            return null; 
-        }
-
-        const files = fs.readdirSync(W1_BASE_PATH);
-        // Find a directory starting with '28-' (standard DS18B20 prefix)
-        const sensorDir = files.find(file => file.startsWith('28-'));
-
-        if (!sensorDir) {
-            console.error(`No sensor found in ${W1_BASE_PATH} (looking for '28-')`);
-            return null;
-        }
-
-        cachedSensorPath = path.join(W1_BASE_PATH, sensorDir, 'w1_slave');
-        console.log(`Found sensor at: ${cachedSensorPath}`);
-        return cachedSensorPath;
-    } catch (err) {
-        console.error("Error searching for sensor:", err);
-        return null;
+  if (!sensorInitialized) {
+    if (FAKE_TEMPERATURE !== undefined && FAKE_HUMIDITY !== undefined) {
+      sensorLib.initialize({
+        test: {
+          fake: {
+            temperature: parseFloat(FAKE_TEMPERATURE),
+            humidity: parseFloat(FAKE_HUMIDITY),
+          },
+        },
+      });
+      console.log('DHT sensor test mode enabled');
     }
+
+    sensorInitialized = true;
+  }
+
+  return sensorLib;
 }
 
 exports.getTemp = function () {
   try {
-    const sensorPath = findSensorPath();
-    
-    if (!sensorPath) {
-        console.error(`Sensor path not resolved. Base: ${W1_BASE_PATH}`);
-        return null;
-    }
+    const sensor = getSensorLib();
+    const readout = sensor.read(SENSOR_TYPE, GPIO_PIN);
 
-    const data = fs.readFileSync(sensorPath, 'utf8');
-    
-    // Check for YES (CRC check)
-    if (!data.includes('YES')) {
-      console.error("CRC check failed");
+    if (!readout || !Number.isFinite(readout.temperature) || !Number.isFinite(readout.humidity)) {
+      console.error("Invalid DHT sensor readout", readout);
       return null;
     }
 
-    const match = data.match(/t=(\d+)/);
-    if (!match || match.length < 2) {
-      console.error("Temperature not found in file content");
-      return null;
-    }
-
-    const tempValue = parseInt(match[1]);
+    const tempValue = Math.round(readout.temperature * 1000);
+    console.log(`DHT${SENSOR_TYPE} readout: ${readout.temperature.toFixed(1)}°C, ${readout.humidity.toFixed(1)}% humidity`);
     
-    // Insert into DB
     queries.insertRow(tempValue);
 
     return tempValue;
   } catch (err) {
-    console.error("Error reading temperature:", err.message);
-    // If read fails, maybe the file disappeared? Clear cache.
-    cachedSensorPath = null;
+    console.error("Error reading DHT sensor:", err.message);
     return null;
   }
 }

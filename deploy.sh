@@ -14,7 +14,7 @@ if [ "$1" == "--quick" ]; then
     # Sync source files only (skipping node_modules, .git, etc via rsync exclusions if needed)
     # Using scp for simplicity
     echo "📤 Syncing code to Pi..."
-    scp -r server.js package.json TemperatureService.js index.html entrypoint.sh public services $PI_USER@$PI_HOST:$PI_DIR/
+    scp -r server.js package.json package-lock.json index.html entrypoint.sh public services $PI_USER@$PI_HOST:$PI_DIR/
     
     echo "🔄 Restarting server on Pi..."
     ssh -t $PI_USER@$PI_HOST "cd $PI_DIR && \
