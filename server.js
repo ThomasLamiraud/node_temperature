@@ -37,6 +37,7 @@ function pollTemperature() {
 
 io.on("connection", async (socket) => {
   console.log("Client connected");
+  socket.emit('led status', leds.getStatus());
   
   // Send last known temperature to the new client
   try {
@@ -61,6 +62,16 @@ io.on("connection", async (socket) => {
     } catch (err) {
         console.error("Error fetching history:", err);
     }
+  });
+
+  socket.on('set led enabled', (enabled) => {
+    try {
+        leds.setEnabled(enabled);
+    } catch (err) {
+        console.error("Error changing LED status:", err.message);
+    }
+
+    io.emit('led status', leds.getStatus());
   });
 
   socket.on('disconnect', () => {

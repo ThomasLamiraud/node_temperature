@@ -10,9 +10,11 @@ const TEMPERATURE_LEDS = [
 
 let initialized = false;
 let disabled = false;
+let enabled = true;
 let exportedLeds = [];
 let activeLedName = null;
 let cleanupHandlersRegistered = false;
+let lastTemperature = null;
 
 function getActiveTemperatureLed(temperature) {
   return TEMPERATURE_LEDS.find((led) => led.matches(temperature));
@@ -99,6 +101,13 @@ exports.updateTemperature = function (temperature) {
     return;
   }
 
+  lastTemperature = temperature;
+
+  if (!enabled) {
+    if (initialized) turnAllOff();
+    return;
+  }
+
   const activeLed = getActiveTemperatureLed(temperature);
   if (!activeLed || activeLed.name === activeLedName) return;
 
@@ -113,6 +122,27 @@ exports.updateTemperature = function (temperature) {
   } catch (error) {
     disableLeds(error.message);
   }
+};
+
+exports.setEnabled = function (nextEnabled) {
+  enabled = Boolean(nextEnabled);
+
+  if (!enabled) {
+    cleanup();
+    return;
+  }
+
+  if (lastTemperature !== null) {
+    exports.updateTemperature(lastTemperature);
+  }
+};
+
+exports.getStatus = function () {
+  return {
+    enabled,
+    available: !disabled,
+    activeLed: activeLedName,
+  };
 };
 
 exports.cleanup = cleanup;

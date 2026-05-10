@@ -1,5 +1,6 @@
 const socket = io();
 let tempChart;
+let ledsEnabled = true;
 
 // Theme handling
 function toggleTheme() {
@@ -166,6 +167,28 @@ function requestHistory(range) {
     if(btn) btn.classList.add('active');
 }
 
+function toggleLedStatus() {
+    socket.emit('set led enabled', !ledsEnabled);
+}
+
+function updateLedStatus(status) {
+    if (!status) return;
+
+    ledsEnabled = Boolean(status.enabled);
+
+    const button = document.getElementById('led-toggle');
+    const label = document.getElementById('led-status');
+    if (!button || !label) return;
+
+    button.innerText = ledsEnabled ? 'Disable LEDs' : 'Enable LEDs';
+    button.classList.toggle('active', ledsEnabled);
+    label.innerText = ledsEnabled ? 'LEDs enabled' : 'LEDs disabled';
+
+    if (status.available === false) {
+        label.innerText = 'LEDs unavailable';
+    }
+}
+
 socket.on('history', function(history) {
     if (!tempChart) return;
     
@@ -181,6 +204,8 @@ socket.on('history', function(history) {
     tempChart.data.datasets[1].data = humidityData;
     tempChart.update();
 });
+
+socket.on('led status', updateLedStatus);
 
 function normalizeReadout(readout) {
     if (typeof readout === 'number') {
