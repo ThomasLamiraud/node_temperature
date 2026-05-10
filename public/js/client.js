@@ -41,9 +41,9 @@ function getTemperatureLedRange(temperature) {
     return TEMPERATURE_LED_RANGES.find((range) => range.matches(temperature));
 }
 
-function addColorToValueDisplay(html_tag, value) {
-  const ledRange = getTemperatureLedRange(value);
-  html_tag.style.color = ledRange.color;
+function updateTemperatureColor(element, temperature) {
+  const ledRange = getTemperatureLedRange(temperature);
+  element.style.color = ledRange.color;
 }
 
 function renderLedLegend() {
@@ -302,7 +302,7 @@ socket.on('sending temperature', function(readout) {
     humidityDisplay.classList.remove('loading');
     
     temperatureDisplay.innerText = `${celsius} °C`;
-    addColorToValueDisplay(temperatureDisplay, sensorReadout.temperature);
+    updateTemperatureColor(temperatureDisplay, sensorReadout.temperature);
     humidityDisplay.innerText =  `${humidity.toFixed(1)} %`
     document.getElementById("last-updated").innerText = "Last updated: " + new Date().toLocaleTimeString();
 
