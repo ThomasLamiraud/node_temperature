@@ -9,6 +9,7 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const createDbConnection = require("./services/db/db")
 const temperatureService = require("./services/TemperatureService");
+const leds = require("./services/leds");
 
 app.use(express.static('public'));
 
@@ -25,6 +26,12 @@ function pollTemperature() {
     if (readout !== null) {
         console.log("New readout:", readout);
         io.emit('sending temperature', readout);
+
+        try {
+            leds.updateTemperature(readout.temperature);
+        } catch (err) {
+            console.error("Error updating LED status:", err.message);
+        }
     }
 }
 
