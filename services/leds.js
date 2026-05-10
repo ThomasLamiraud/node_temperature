@@ -2,7 +2,7 @@ const ON = 1;
 const OFF = 0;
 
 const TEMPERATURE_LEDS = [
-  { name: "cold / white", pin: 23, matches: (temperature) => temperature < 18000 },
+  { name: "cold / white", pin: 23, matches: (temperature) => temperature < 20000 },
   { name: "comfortable / green", pin: 24, matches: (temperature) => temperature <= 24000 },
   { name: "warm / orange", pin: 25, matches: (temperature) => temperature <= 28000 },
   { name: "hot / red", pin: 18, matches: () => true },

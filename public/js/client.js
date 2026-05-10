@@ -2,6 +2,18 @@ const socket = io();
 let tempChart;
 let ledsEnabled = true;
 
+const TEMPERATURE_LEDS_COLORS = [
+    { matches: (temperature) => temperature < 20000, color: "#f8fafc" },
+  { matches: (temperature) => temperature <= 24000, color: "#22c55e" },
+  { matches: (temperature) => temperature <= 28000, color: "#f97316" },
+  { matches: () => true, color: "#ef4444" },
+]
+
+function addColorToValueDisplay(html_tag, value) {
+  color = TEMPERATURE_LEDS_COLORS.find((led) => led.matches(value)).color;
+  html_tag.style.color = color;
+}
+
 // Theme handling
 function toggleTheme() {
     const html = document.documentElement;
@@ -135,7 +147,7 @@ function initChart() {
                 y: {
                     beginAtZero: false,
                     ticks: {
-                        stepSize: 0.5
+                        stepSize: 1
                     },
                     grid: {
                         color: gridColor
@@ -234,10 +246,11 @@ socket.on('sending temperature', function(readout) {
     const humidity = Number.isFinite(sensorReadout.humidity) ? Number(sensorReadout.humidity.toFixed(1)) : null;
     
     temperatureDisplay.classList.remove('loading');
-    if (humidityDisplay) humidityDisplay.classList.remove('loading');
+    humidityDisplay.classList.remove('loading');
     
     temperatureDisplay.innerText = `${celsius} °C`;
-    if (humidityDisplay) humidityDisplay.innerText = humidity === null ? '--.- %' : `${humidity.toFixed(1)} %`;
+    addColorToValueDisplay(temperatureDisplay, sensorReadout.temperature);
+    humidityDisplay.innerText =  `${humidity.toFixed(1)} %`
     document.getElementById("last-updated").innerText = "Last updated: " + new Date().toLocaleTimeString();
 
     // Update chart
