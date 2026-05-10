@@ -10,36 +10,23 @@ const io = new Server(server);
 const createDbConnection = require("./services/db/db")
 const temperatureService = require("./services/TemperatureService");
 
-// Initialize DB
-createDbConnection();
-
 app.use(express.static('public'));
 
 app.get('/', async (_req, res) => {
   res.sendFile(__dirname + '/index.html');
 })
 
-server.listen(port, hostname, () => {
-    console.log(`Server is running on http://${hostname}:${port}`);
-});
-
 // Polling every 5 minutes (300000 ms)
 const POLLING_INTERVAL = 5 * 60 * 1000;
 
 function pollTemperature() {
     console.log("Polling temperature...");
-    const temp = temperatureService.getTemp();
-    if (temp !== null) {
-        console.log("New temperature:", temp);
-        io.emit('sending temperature', temp);
+    const readout = temperatureService.getReadout();
+    if (readout !== null) {
+        console.log("New readout:", readout);
+        io.emit('sending temperature', readout);
     }
 }
-
-// Start polling
-setInterval(pollTemperature, POLLING_INTERVAL);
-
-// Initial poll on startup (optional, but good for testing)
-pollTemperature();
 
 io.on("connection", async (socket) => {
   console.log("Client connected");
@@ -48,7 +35,10 @@ io.on("connection", async (socket) => {
   try {
       const rows = await queries.selectLastTemperature();
       if (rows && rows.length > 0) {
-          socket.emit('sending temperature', rows[0].value);
+          socket.emit('sending temperature', {
+              temperature: rows[0].value,
+              humidity: rows[0].humidity,
+          });
       }
       
       const history = await queries.selectTemperaturesByRange();
@@ -70,3 +60,21 @@ io.on("connection", async (socket) => {
     console.log('Client disconnected');
   })
 })
+
+async function startApp() {
+    try {
+        await createDbConnection();
+
+        server.listen(port, hostname, () => {
+            console.log(`Server is running on http://${hostname}:${port}`);
+        });
+
+        setInterval(pollTemperature, POLLING_INTERVAL);
+        pollTemperature();
+    } catch (err) {
+        console.error("Failed to initialize app:", err);
+        process.exit(1);
+    }
+}
+
+startApp();

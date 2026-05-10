@@ -41,6 +41,7 @@ function updateChartTheme(theme) {
     Chart.defaults.borderColor = gridColor;
     
     tempChart.options.scales.y.grid.color = gridColor;
+    tempChart.options.scales.y1.grid.color = gridColor;
     tempChart.options.plugins.tooltip.backgroundColor = tooltipBg;
     tempChart.options.plugins.tooltip.titleColor = tooltipTitle;
     tempChart.options.plugins.tooltip.borderColor = tooltipBorder;
@@ -62,6 +63,10 @@ function initChart() {
     gradient.addColorStop(0, 'rgba(56, 189, 248, 0.5)');   // Light blue
     gradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');   // Transparent
 
+    const humidityGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    humidityGradient.addColorStop(0, 'rgba(129, 140, 248, 0.35)');
+    humidityGradient.addColorStop(1, 'rgba(129, 140, 248, 0.0)');
+
     const textColor = isLight ? '#64748b' : '#94a3b8';
     const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
     const tooltipBg = isLight ? '#ffffff' : '#1e293b';
@@ -78,6 +83,7 @@ function initChart() {
             datasets: [{
                 label: 'Temperature (°C)',
                 data: [],
+                yAxisID: 'y',
                 borderColor: '#38bdf8',
                 backgroundColor: gradient,
                 borderWidth: 2,
@@ -87,6 +93,19 @@ function initChart() {
                 pointHoverRadius: 5,
                 fill: true,
                 tension: 0.4 // Smoother curves
+            }, {
+                label: 'Humidity (%)',
+                data: [],
+                yAxisID: 'y1',
+                borderColor: '#818cf8',
+                backgroundColor: humidityGradient,
+                borderWidth: 2,
+                pointBackgroundColor: '#818cf8',
+                pointBorderColor: '#fff',
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                fill: true,
+                tension: 0.4
             }]
         },
         options: {
@@ -94,7 +113,7 @@ function initChart() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false
+                    display: true
                 },
                 tooltip: {
                     mode: 'index',
@@ -115,6 +134,15 @@ function initChart() {
                 y: {
                     beginAtZero: false,
                     grid: {
+                        color: gridColor
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    max: 100,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
                         color: gridColor
                     }
                 }
@@ -145,31 +173,51 @@ socket.on('history', function(history) {
         const date = new Date(row.date);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     });
-    const data = history.map(row => (row.value / 1000).toFixed(1));
+    const temperatureData = history.map(row => row.value / 1000);
+    const humidityData = history.map(row => row.humidity === null ? null : Number(row.humidity));
     
     tempChart.data.labels = labels;
-    tempChart.data.datasets[0].data = data;
+    tempChart.data.datasets[0].data = temperatureData;
+    tempChart.data.datasets[1].data = humidityData;
     tempChart.update();
 });
 
-socket.on('sending temperature', function(temperature) {
-  console.log("Received temperature:", temperature);
-  const display = document.getElementById("temperature-display");
-  if (display) {
-    // Temperature is in milliCelsius
-    const celsius = (temperature / 1000).toFixed(1);
+function normalizeReadout(readout) {
+    if (typeof readout === 'number') {
+        return {
+            temperature: readout,
+            humidity: null,
+        };
+    }
+
+    return readout;
+}
+
+socket.on('sending temperature', function(readout) {
+  const sensorReadout = normalizeReadout(readout);
+  console.log("Received sensor readout:", sensorReadout);
+
+  if (!sensorReadout || sensorReadout.temperature === undefined) return;
+
+  const temperatureDisplay = document.getElementById("temperature-display");
+  const humidityDisplay = document.getElementById("humidity-display");
+  if (temperatureDisplay) {
+    const celsius = (sensorReadout.temperature / 1000).toFixed(1);
+    const humidity = Number.isFinite(sensorReadout.humidity) ? Number(sensorReadout.humidity.toFixed(1)) : null;
     
-    // Remove loading class
-    display.classList.remove('loading');
+    temperatureDisplay.classList.remove('loading');
+    if (humidityDisplay) humidityDisplay.classList.remove('loading');
     
-    display.innerText = `${celsius} °C`;
+    temperatureDisplay.innerText = `${celsius} °C`;
+    if (humidityDisplay) humidityDisplay.innerText = humidity === null ? '--.- %' : `${humidity.toFixed(1)} %`;
     document.getElementById("last-updated").innerText = "Last updated: " + new Date().toLocaleTimeString();
 
     // Update chart
     if (tempChart) {
         const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         tempChart.data.labels.push(now);
-        tempChart.data.datasets[0].data.push(celsius);
+        tempChart.data.datasets[0].data.push(Number(celsius));
+        tempChart.data.datasets[1].data.push(humidity);
         
         // Keep only last 50 points if we are in "all" mode (default)
         // If viewing history, we might want to just append or refresh, but typically realtime updates happen in 'live' mode
@@ -177,6 +225,7 @@ socket.on('sending temperature', function(temperature) {
         if (tempChart.data.labels.length > 100) {
             tempChart.data.labels.shift();
             tempChart.data.datasets[0].data.shift();
+            tempChart.data.datasets[1].data.shift();
         }
         tempChart.update();
     }

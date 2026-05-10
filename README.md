@@ -1,6 +1,6 @@
-# node_temperature
+# HomeMonitor
 
-Simple application to display temperature and humidity from a DHT22 sensor.
+Home monitoring app currently displaying temperature and humidity from a DHT22 sensor.
 
 ## Configuration
 
@@ -55,7 +55,7 @@ For a quick code-only update, run:
 ./deploy.sh --quick
 ```
 
-Quick deploy only syncs the source files and restarts the existing container. Use it after JavaScript, HTML, CSS, or README changes, but not after dependency or Docker configuration changes.
+Quick deploy only syncs source files into the existing container and restarts it. Use it after JavaScript, HTML, or CSS changes, but not after dependency, Dockerfile, or Docker Compose changes.
 
 The SQLite database is persisted on the Pi through this Docker Compose mount:
 
@@ -64,3 +64,5 @@ The SQLite database is persisted on the Pi through this Docker Compose mount:
 ```
 
 That means normal deploys and container restarts keep the existing data in `~/node_temperature/db/temperature_db.db`.
+
+Sensor data is stored in the `sensor_readings` table. On startup, older rows from the previous `temperatures` table are copied into `sensor_readings` with `humidity = NULL`, so existing temperature history is preserved.

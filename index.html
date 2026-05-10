@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temperature Monitor</title>
+    <title>HomeMonitor</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,15 +26,24 @@
                 <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             </button>
         </div>
-        <h1>TempMonitor Pi</h1>
+        <h1>HomeMonitor</h1>
         <p style="color: var(--text-secondary)">Real-time Sensor Dashboard</p>
     </header>
 
     <main class="dashboard-container">
-        <!-- Current Temperature Card -->
+        <!-- Current Sensor Card -->
         <div class="card temp-card">
             <h2>Current</h2>
-            <div id="temperature-display" class="loading">--.- °C</div>
+            <div class="sensor-values">
+                <div>
+                    <span class="sensor-label">Temperature</span>
+                    <div id="temperature-display" class="sensor-value loading">--.- °C</div>
+                </div>
+                <div>
+                    <span class="sensor-label">Humidity</span>
+                    <div id="humidity-display" class="sensor-value loading">--.- %</div>
+                </div>
+            </div>
             <div id="last-updated">Waiting for sensor...</div>
         </div>
 

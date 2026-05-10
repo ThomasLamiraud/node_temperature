@@ -83,7 +83,7 @@ h1 {
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* Current Temperature Card */
+/* Current Sensor Card */
 .temp-card {
     text-align: center;
     display: flex;
@@ -92,12 +92,30 @@ h1 {
     justify-content: center;
 }
 
-#temperature-display {
-    font-size: 3rem;
+.sensor-values {
+    display: grid;
+    gap: 1.5rem;
+    margin: 1rem 0;
+}
+
+.sensor-label {
+    color: var(--text-secondary);
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.sensor-value {
+    font-size: 2.5rem;
     font-weight: 800;
     color: var(--accent-color);
-    margin: 1rem 0;
     text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+#humidity-display {
+    color: #818cf8;
+    text-shadow: 0 0 20px rgba(129, 140, 248, 0.3);
 }
 
 #last-updated {
