@@ -49,6 +49,25 @@
                 <button id="led-toggle" type="button" onclick="toggleLedStatus()">Disable LEDs</button>
                 <span id="led-status">LEDs enabled</span>
             </div>
+            <div class="led-legend" aria-label="LED color temperature legend">
+                <span class="sensor-label">LEDs</span>
+                <div class="led-legend-item">
+                    <span class="led-dot led-dot-white"></span>
+                    <span>White &lt; 18°C - Cold</span>
+                </div>
+                <div class="led-legend-item">
+                    <span class="led-dot led-dot-green"></span>
+                    <span>Green 18-24°C - Comfortable</span>
+                </div>
+                <div class="led-legend-item">
+                    <span class="led-dot led-dot-orange"></span>
+                    <span>Orange 24-28°C - Warm</span>
+                </div>
+                <div class="led-legend-item">
+                    <span class="led-dot led-dot-red"></span>
+                    <span>Red &gt; 28°C - Hot</span>
+                </div>
+            </div>
         </div>
 
         <!-- History Chart Card -->
