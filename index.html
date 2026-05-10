@@ -16,12 +16,12 @@
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/js/client.js" defer></script>
+    <script type="module" src="/js/client.js"></script>
 </head>
 <body>
     <header>
         <div style="position: absolute; top: 2rem; right: 2rem;">
-            <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme">
+            <button id="theme-toggle" aria-label="Toggle Theme">
                 <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             </button>
@@ -46,7 +46,7 @@
             </div>
             <div id="last-updated">Waiting for sensor...</div>
             <div class="led-control">
-                <button id="led-toggle" type="button" onclick="toggleLedStatus()">Disable LEDs</button>
+                <button id="led-toggle" type="button">Disable LEDs</button>
                 <span id="led-status">LEDs enabled</span>
             </div>
             <div id="led-legend" class="led-legend" aria-label="LED color temperature legend">
@@ -57,10 +57,10 @@
         <!-- History Chart Card -->
         <div class="card chart-card">
             <div class="chart-controls">
-                <button onclick="requestHistory('1h')" id="btn-1h">1 Hour</button>
-                <button onclick="requestHistory('24h')" id="btn-24h">24 Hours</button>
-                <button onclick="requestHistory('7d')" id="btn-7d">7 Days</button>
-                <button onclick="requestHistory('all')" id="btn-all" class="active">Latest 50</button>
+                <button data-range="1h" id="btn-1h">1 Hour</button>
+                <button data-range="24h" id="btn-24h">24 Hours</button>
+                <button data-range="7d" id="btn-7d">7 Days</button>
+                <button data-range="all" id="btn-all" class="active">Latest 50</button>
             </div>
             <div id="chart-container">
                 <canvas id="tempChart"></canvas>
