@@ -36,11 +36,16 @@
             <h2>Current</h2>
             <div class="sensor-values">
                 <div>
-                    <span class="sensor-label">Temperature</span>
+                    <span class="sensor-label sensor-label-with-icon">
+                        Temperature
+                    </span>
                     <div id="temperature-display" class="sensor-value loading">--.- °C</div>
+                    <div id="led-legend" class="led-legend" aria-label="LED color temperature legend"></div>
                 </div>
                 <div>
-                    <span class="sensor-label">Humidity</span>
+                    <span class="sensor-label sensor-label-with-icon">
+                        Humidity
+                    </span>
                     <div id="humidity-display" class="sensor-value loading">--.- %</div>
                 </div>
             </div>
@@ -48,9 +53,6 @@
             <div class="led-control">
                 <button id="led-toggle" type="button">Disable LEDs</button>
                 <span id="led-status">LEDs enabled</span>
-            </div>
-            <div id="led-legend" class="led-legend" aria-label="LED color temperature legend">
-                <span class="sensor-label">LEDs</span>
             </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { appendReadoutToChart, initChart, setChartHistory, updateChartTheme } from "./chart.js";
-import { getLedsEnabled, renderLedLegend, updateLedStatus } from "./led-ui.js";
+import { getLedsEnabled, renderLedLegend, updateLedScaleCaret, updateLedStatus } from "./led-ui.js";
 import { normalizeReadout, updateSensorDisplay } from "./sensor-display.js";
 import { initTheme, toggleTheme } from "./theme.js";
 
@@ -42,6 +42,7 @@ socket.on("sending temperature", function (readout) {
     const formattedReadout = updateSensorDisplay(sensorReadout);
     if (!formattedReadout) return;
 
+    updateLedScaleCaret(sensorReadout.temperature);
     appendReadoutToChart(formattedReadout);
 });
 
