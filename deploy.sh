@@ -11,14 +11,20 @@ DOCKER_COMPOSE_FILE="docker-compose.yaml"
 if [ "$1" == "--quick" ]; then
     echo "🚀 Quick Deploy Mode (Code Sync Only)..."
     
-    # Sync source files only (skipping node_modules, .git, etc via rsync exclusions if needed)
-    # Using scp for simplicity
+    # Sync source files to the Pi host, then copy them into the existing container.
     echo "📤 Syncing code to Pi..."
-    scp -r server.js package.json package-lock.json index.html entrypoint.sh public services $PI_USER@$PI_HOST:$PI_DIR/
+    scp -r server.js index.html public services $PI_USER@$PI_HOST:$PI_DIR/
     
     echo "🔄 Restarting server on Pi..."
     ssh -t $PI_USER@$PI_HOST "cd $PI_DIR && \
-        echo 'Restarting container to pick up changes...' && \
+        CONTAINER_ID=\$(sudo docker compose ps -q temp-monitor) && \
+        test -n \"\$CONTAINER_ID\" && \
+        echo 'Copying source files into container...' && \
+        sudo docker cp server.js \"\$CONTAINER_ID\":/app/server.js && \
+        sudo docker cp index.html \"\$CONTAINER_ID\":/app/index.html && \
+        sudo docker cp public/. \"\$CONTAINER_ID\":/app/public/ && \
+        sudo docker cp services/. \"\$CONTAINER_ID\":/app/services/ && \
+        echo 'Restarting container...' && \
         sudo docker compose restart temp-monitor && \
         echo 'Done!'"
         

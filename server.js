@@ -9,6 +9,7 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const createDbConnection = require("./services/db/db")
 const temperatureService = require("./services/TemperatureService");
+const weatherService = require("./services/WeatherService");
 const leds = require("./services/leds");
 
 app.use(express.static('public'));
@@ -19,6 +20,7 @@ app.get('/', async (_req, res) => {
 
 // Polling every 5 minutes (300000 ms)
 const POLLING_INTERVAL = 5 * 60 * 1000;
+const WEATHER_POLLING_INTERVAL = parseInt(process.env.WEATHER_POLL_INTERVAL_MS, 10) || 60 * 60 * 1000;
 
 function pollTemperature() {
     console.log("Polling temperature...");
@@ -35,9 +37,22 @@ function pollTemperature() {
     }
 }
 
+async function pollOutsideTemperature() {
+    const readout = await weatherService.getReadout();
+    if (readout !== null) {
+        console.log("Outside temperature:", readout);
+        io.emit('outside temperature', readout);
+    }
+}
+
 io.on("connection", async (socket) => {
   console.log("Client connected");
   socket.emit('led status', leds.getStatus());
+
+  const outsideReadout = weatherService.getCachedReadout();
+  if (outsideReadout) {
+      socket.emit('outside temperature', outsideReadout);
+  }
   
   // Send last known temperature to the new client
   try {
@@ -88,7 +103,9 @@ async function startApp() {
         });
 
         setInterval(pollTemperature, POLLING_INTERVAL);
+        setInterval(pollOutsideTemperature, WEATHER_POLLING_INTERVAL);
         pollTemperature();
+        pollOutsideTemperature();
     } catch (err) {
         console.error("Failed to initialize app:", err);
         process.exit(1);

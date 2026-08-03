@@ -11,6 +11,29 @@ The DHT22 data pin is read through `node-dht-sensor`. Configure the sensor with:
 
 For local development without hardware, set both `DHT_FAKE_TEMPERATURE` and `DHT_FAKE_HUMIDITY`.
 
+### Outside weather
+
+The dashboard retrieves the current outside temperature from [Open-Meteo](https://open-meteo.com/en/docs). No API key or additional Node.js dependency is required.
+
+Configure the location with:
+
+- `WEATHER_CITY`: city name
+- `WEATHER_COUNTRY`: country name used to disambiguate the city
+- `WEATHER_LAT` and `WEATHER_LON`: optional exact coordinates; when both are set, they override the city
+- `WEATHER_POLL_INTERVAL_MS`: optional polling interval; defaults to 1 hour
+- `WEATHER_CACHE_TTL_MS`: optional cache duration; defaults to 1 hour
+- `WEATHER_REQUEST_TIMEOUT_MS`: optional request timeout; defaults to 8 seconds
+
+Docker Compose defaults to Rouen, France. To use another city, copy `.env.example` to `.env` and edit its values:
+
+```sh
+cp .env.example .env
+```
+
+The deployment script does not copy `.env`. If overriding the default city, create the file in `~/node_temperature` on the Raspberry Pi before running a full deployment.
+
+For local development without a network request, set `WEATHER_FAKE_TEMPERATURE`.
+
 ## Local Preview
 
 On a Mac, install only the non-hardware dependencies:
@@ -22,7 +45,7 @@ npm install --omit=optional
 Then start the app with fake DHT22 values:
 
 ```sh
-DHT_FAKE_TEMPERATURE=21.5 DHT_FAKE_HUMIDITY=48.2 node server.js
+DHT_FAKE_TEMPERATURE=21.5 DHT_FAKE_HUMIDITY=48.2 WEATHER_FAKE_TEMPERATURE=12.8 node server.js
 ```
 
 Open `http://localhost:8000` in your browser.

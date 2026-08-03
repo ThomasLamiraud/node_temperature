@@ -11,4 +11,11 @@ services:
       - DHT_SENSOR_TYPE=22
       # BCM GPIO number where the DHT22 data pin is connected
       - DHT_GPIO_PIN=4
+      # City resolved to coordinates through Open-Meteo
+      - WEATHER_CITY=${WEATHER_CITY:-Rouen}
+      - WEATHER_COUNTRY=${WEATHER_COUNTRY:-France}
+      # Optional coordinates override the city when both are set
+      - WEATHER_LAT=${WEATHER_LAT}
+      - WEATHER_LON=${WEATHER_LON}
+      - WEATHER_POLL_INTERVAL_MS=3600000
     privileged: true # Required for hardware access

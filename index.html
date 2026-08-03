@@ -31,29 +31,39 @@
     </header>
 
     <main class="dashboard-container">
-        <!-- Current Sensor Card -->
+        <!-- Current Conditions Card -->
         <div class="card temp-card">
-            <h2>Current</h2>
-            <div class="sensor-values">
-                <div>
-                    <span class="sensor-label sensor-label-with-icon">
-                        Temperature
-                    </span>
-                    <div id="temperature-display" class="sensor-value loading">--.- °C</div>
+            <section class="conditions-section indoor-section" aria-labelledby="indoor-heading">
+                <h2 id="indoor-heading"><span class="section-icon" aria-hidden="true">🏠</span> Indoor</h2>
+                <div class="indoor-values">
+                    <div>
+                        <span class="sensor-label">Temperature</span>
+                        <div id="temperature-display" class="sensor-value loading">--.- °C</div>
+                    </div>
+                    <div>
+                        <span class="sensor-label">Humidity</span>
+                        <div id="humidity-display" class="sensor-value loading">--.- %</div>
+                    </div>
+                </div>
+
+                <div class="led-management">
+                    <span class="sensor-label">Temperature LEDs</span>
                     <div id="led-legend" class="led-legend" aria-label="LED color temperature legend"></div>
+                    <div class="led-control">
+                        <button id="led-toggle" type="button" aria-pressed="true">Turn LEDs off</button>
+                        <span id="led-status">On</span>
+                    </div>
                 </div>
-                <div>
-                    <span class="sensor-label sensor-label-with-icon">
-                        Humidity
-                    </span>
-                    <div id="humidity-display" class="sensor-value loading">--.- %</div>
-                </div>
-            </div>
-            <div id="last-updated">Waiting for sensor...</div>
-            <div class="led-control">
-                <button id="led-toggle" type="button">Disable LEDs</button>
-                <span id="led-status">LEDs enabled</span>
-            </div>
+
+                <div id="last-updated" class="update-time">Waiting for sensor...</div>
+            </section>
+
+            <section class="conditions-section outside-section" aria-labelledby="outside-heading">
+                <h2 id="outside-heading"><span class="section-icon" aria-hidden="true">🌤️</span> Outside</h2>
+                <div id="outside-temperature-display" class="sensor-value loading">--.- °C</div>
+                <div id="outside-location" class="outside-location">Locating weather...</div>
+                <div id="outside-last-updated" class="update-time">Waiting for weather...</div>
+            </section>
         </div>
 
         <!-- History Chart Card -->

@@ -18,9 +18,10 @@ export function updateLedStatus(status) {
     const label = document.getElementById("led-status");
     if (!button || !label) return;
 
-    button.innerText = ledsEnabled ? "Disable LEDs" : "Enable LEDs";
+    button.innerText = ledsEnabled ? "Turn LEDs off" : "Turn LEDs on";
     button.classList.toggle("active", ledsEnabled);
-    label.innerText = ledsEnabled ? "LEDs enabled" : "LEDs disabled";
+    button.setAttribute("aria-pressed", String(ledsEnabled));
+    label.innerText = ledsEnabled ? "On" : "Off";
 
     if (status.available === false) {
         label.innerText = "LEDs unavailable";

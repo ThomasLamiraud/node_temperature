@@ -24,7 +24,7 @@ export function updateSensorDisplay(sensorReadout) {
     temperatureDisplay.innerText = `${formattedReadout.celsius} °C`;
     updateTemperatureColor(temperatureDisplay, sensorReadout.temperature);
     humidityDisplay.innerText = formattedReadout.humidity === null ? "--.- %" : `${formattedReadout.humidity.toFixed(1)} %`;
-    document.getElementById("last-updated").innerText = "Last updated: " + new Date().toLocaleTimeString();
+    document.getElementById("last-updated").innerText = "Updated " + new Date().toLocaleTimeString();
 
     return formattedReadout;
 }

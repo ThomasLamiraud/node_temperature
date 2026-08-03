@@ -1,5 +1,6 @@
 import { appendReadoutToChart, initChart, setChartHistory, updateChartTheme } from "./chart.js";
 import { getLedsEnabled, renderLedLegend, updateLedScaleCaret, updateLedStatus } from "./led-ui.js";
+import { updateOutsideDisplay } from "./outside-display.js";
 import { normalizeReadout, updateSensorDisplay } from "./sensor-display.js";
 import { initTheme, toggleTheme } from "./theme.js";
 
@@ -32,6 +33,7 @@ function bindEventListeners() {
 
 socket.on("history", setChartHistory);
 socket.on("led status", updateLedStatus);
+socket.on("outside temperature", updateOutsideDisplay);
 
 socket.on("sending temperature", function (readout) {
     const sensorReadout = normalizeReadout(readout);
