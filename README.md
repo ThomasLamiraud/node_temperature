@@ -8,6 +8,8 @@ The DHT22 data pin is read through `node-dht-sensor`. Configure the sensor with:
 
 - `DHT_SENSOR_TYPE`: defaults to `22`
 - `DHT_GPIO_PIN`: defaults to `4` and uses the BCM GPIO number
+- `DHT_MAX_READ_ATTEMPTS`: defaults to `3`
+- `DHT_RETRY_DELAY_MS`: defaults to `2000` milliseconds between failed reads
 
 For local development without hardware, set both `DHT_FAKE_TEMPERATURE` and `DHT_FAKE_HUMIDITY`.
 

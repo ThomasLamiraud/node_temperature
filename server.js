@@ -22,9 +22,9 @@ app.get('/', async (_req, res) => {
 const POLLING_INTERVAL = 5 * 60 * 1000;
 const WEATHER_POLLING_INTERVAL = parseInt(process.env.WEATHER_POLL_INTERVAL_MS, 10) || 60 * 60 * 1000;
 
-function pollTemperature() {
+async function pollTemperature() {
     console.log("Polling temperature...");
-    const readout = temperatureService.getReadout();
+    const readout = await temperatureService.getReadout();
     if (readout !== null) {
         console.log("New readout:", readout);
         io.emit('sending temperature', readout);
