@@ -2,7 +2,7 @@
 
 # Configuration
 PI_USER="pi"
-PI_HOST="192.168.1.130"
+PI_HOST="${PI_HOST:-homemonitor.local}"
 PI_DIR="~/node_temperature"
 IMAGE_NAME="temp-monitor"
 TAR_FILE="temp-monitor.tar"
